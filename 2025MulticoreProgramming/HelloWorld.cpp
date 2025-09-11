@@ -5,16 +5,18 @@
 #include <vector>
 #include <atomic>
 
-std::atomic<int> sum;
+volatile int sum;
 std::mutex mtx;
 
 void worker(const int loop_count) 
 {
+	volatile int local_sum = 0;
 	for (auto i = 0; i < loop_count; ++i) {
 		//mtx.lock();
-		sum += 2;
+		local_sum += 2;
 		//mtx.unlock();
 	}
+	sum += local_sum;
 }
 
 int main()
@@ -23,7 +25,7 @@ int main()
 
 	auto start = high_resolution_clock::now();
 	for (int i = 0; i < 50000000; ++i) {
-		sum = sum + 2;
+		sum += 2;
 	}
 	auto end = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(end - start).count();
