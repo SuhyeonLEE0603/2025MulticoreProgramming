@@ -5,18 +5,24 @@
 #include <vector>
 #include <atomic>
 
-volatile int sum;
+const int MAX_THREADS = 16;
+const int CACHE_LINE_SIZE_INT = 64;
+volatile int sum = 0;
+struct NUM
+{
+	alignas(64) volatile int value;
+};
+
+NUM array_sum[MAX_THREADS] = { 0 };
 std::mutex mtx;
 
-void worker(const int loop_count) 
-{
-	volatile int local_sum = 0;
+void worker(const int thread_id, const int loop_count) 
+{	
+	
 	for (auto i = 0; i < loop_count; ++i) {
-		//mtx.lock();
-		local_sum += 2;
-		//mtx.unlock();
+		array_sum[thread_id].value =
+			array_sum[thread_id].value + 2;
 	}
-	sum += local_sum;
 }
 
 int main()
@@ -37,11 +43,14 @@ int main()
 		high_resolution_clock::time_point t_start = high_resolution_clock::now();
 		std::vector<std::thread> threads;
 		for(int i = 0; i < num_threads; i++) {
-			threads.emplace_back(worker, 50000000 / num_threads);
+			threads.emplace_back(worker, i, 50000000 / num_threads);
 		}
-		for (auto& t : threads) {
-			t.join();
+		for (int i = 0; i < num_threads; ++i) {
+			threads[i].join();
+			sum = sum + array_sum[i].value;
+			array_sum[i].value = 0;
 		}
+
 		high_resolution_clock::time_point t_end = high_resolution_clock::now();
 		auto t_duration = duration_cast<milliseconds>(t_end - t_start).count();
 		std::cout << num_threads << " threads duration: " << t_duration << " ms, SUM = " << sum << std::endl;
