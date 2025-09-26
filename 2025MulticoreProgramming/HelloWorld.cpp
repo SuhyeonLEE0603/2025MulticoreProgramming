@@ -7,48 +7,54 @@
 
 const int MAX_THREADS = 16;
 const int CACHE_LINE_SIZE_INT = 64;
-volatile int sum = 0;
-struct NUM
-{
-	alignas(64) volatile int value;
-};
+int sum = 0;
+std::atomic_bool lock = false;
 
-NUM array_sum[MAX_THREADS] = { 0 };
 std::mutex mtx;
 
-void worker(const int thread_id, const int loop_count) 
-{	
-	
-	for (auto i = 0; i < loop_count; ++i) {
-		array_sum[thread_id].value =
-			array_sum[thread_id].value + 2;
-	}
+bool CAS(std::atomic_bool* lock_flag, bool old_value, bool new_value)
+{
+	return std::atomic_compare_exchange_strong(
+		lock_flag, &old_value, new_value);
 }
+
+void cas_lock()
+{
+	while (!CAS(&lock, false, true));
+}
+
+void cas_unlock()
+{
+	CAS(&lock, true, false);
+}
+
+void worker3(const int thread_id, const int loop_count)
+{
+	int total = 0;
+	for (int i = 0; i < loop_count; ++i) {
+		cas_lock();
+		sum += 2;
+		cas_unlock();
+	}
+
+}
+
 
 int main()
 {
 	using namespace std::chrono;
 
-	auto start = high_resolution_clock::now();
-	for (int i = 0; i < 50000000; ++i) {
-		sum += 2;
-	}
-	auto end = high_resolution_clock::now();
-	auto duration = duration_cast<milliseconds>(end - start).count();
-	std::cout << "Single thread duration: " << duration << " ms,  SUM = "<< sum << std::endl;
-
-	sum = 0;
-	for(int num_threads = 1; num_threads <= 16; num_threads*=2) {
+	for(int num_threads = 1; num_threads <= 8; num_threads*=2) {
 		sum = 0;
 		high_resolution_clock::time_point t_start = high_resolution_clock::now();
 		std::vector<std::thread> threads;
-		for(int i = 0; i < num_threads; i++) {
-			threads.emplace_back(worker, i, 50000000 / num_threads);
+		
+		for(int i = 0; i < num_threads; ++i) {
+			threads.emplace_back(worker3, i, 5000'0000 / num_threads);
 		}
-		for (int i = 0; i < num_threads; ++i) {
-			threads[i].join();
-			sum = sum + array_sum[i].value;
-			array_sum[i].value = 0;
+
+		for (auto& th : threads) {
+			th.join();
 		}
 
 		high_resolution_clock::time_point t_end = high_resolution_clock::now();

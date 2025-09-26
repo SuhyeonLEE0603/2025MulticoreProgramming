@@ -2,8 +2,9 @@
 #include <thread>
 #include <chrono>
 #include <vector>
+#include <atomic>
 
-volatile int sum;
+std::atomic<int> sum;
 volatile int LOCK = 0;
 
 bool CAS(volatile int* addr, int expected, int new_val)
