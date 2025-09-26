@@ -2,11 +2,15 @@
 #include <thread>
 #include <chrono>
 #include <vector>
+#include <atomic>
+#include <queue>
 
-volatile int  sum = 0;
+std::queue<int> g_queue;
 
- std::atomic_bool flags[2] = { false, false };
- std::atomic_int victim;
+volatile int sum = 0;
+
+ std::atomic<bool> flags[2] = { false, false };
+ std::atomic<int> victim;
 
 void p_lock(int th_id)
 {
@@ -35,15 +39,12 @@ int main()
 {
 	using namespace std::chrono;
 
-	for (int n = 2; n <= 2; n++) {
+	for (int n = 1; n <= 8; n*=2) {
 		sum = 0;
 		std::vector<std::thread> tv;
 		auto start_t = high_resolution_clock::now();
 		for (int i = 0; i < n; ++i) {
-			int num_loop = 5000000 / n;
-			if (i == (n - 1))
-				num_loop += 5000000 % num_loop;
-			tv.emplace_back(worker_p, i, num_loop);
+			tv.emplace_back(worker_p, i, 500'0000 / n);
 		}
 		for (auto& th : tv)
 			th.join();
