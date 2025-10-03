@@ -30,7 +30,7 @@
     <ClCompile Include="Set.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="O_SET.cpp">
+    <ClCompile Include="2019182027_이수현_과제4번.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
