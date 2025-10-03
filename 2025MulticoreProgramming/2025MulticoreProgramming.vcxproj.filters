@@ -30,5 +30,8 @@
     <ClCompile Include="Set.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="O_SET.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

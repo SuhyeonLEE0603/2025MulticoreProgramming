@@ -4,7 +4,7 @@
 #include <vector>
 #include <atomic>
 
-std::atomic<int> sum;
+int sum;
 volatile int LOCK = 0;
 
 bool CAS(volatile int* addr, int expected, int new_val)
