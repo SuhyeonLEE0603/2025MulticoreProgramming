@@ -39,5 +39,8 @@
     <ClCompile Include="LF_NODE.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="SKIP_LIST.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

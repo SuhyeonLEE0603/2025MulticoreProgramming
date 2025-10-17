@@ -13,16 +13,16 @@ public:
 	NODE* volatile next;
 	std::mutex mtx;
 	volatile bool removed;
-	NODE(int x) : next(nullptr), value(x), removed(false) {}
+	NODE(int x) : next(nullptr), value(x), removed(false) {}	
 	void lock() { mtx.lock(); }
 	void unlock() { mtx.unlock(); }
 };
 
 class DUMMY_MTX {
-public:
+	public:
 	void lock() {}
 	void unlock() {}
-};
+};	
 
 class C_SET {
 private:
@@ -114,8 +114,7 @@ public:
 		if (curr->value == x) {
 			mtx.unlock();
 			return true;
-		}
-		else {
+		} else {
 			mtx.unlock();
 			return false;
 		}
@@ -407,7 +406,7 @@ public:
 
 	bool validate(int x, NODE* p, NODE* c)
 	{
-		return (p->removed == false)
+		return (p->removed == false) 
 			&& (c->removed == false)
 			&& (p->next == c);
 	}
@@ -737,121 +736,121 @@ public:
 //	}
 //};
 
-//class NODE_ASP {
-//public:
-//	int value;
-//	std::atomic<std::shared_ptr<NODE_ASP>> next;
-//	std::mutex mtx;
-//	volatile bool removed;
-//	NODE_ASP(int x) : next(nullptr), value(x), removed(false) {}
-//	void lock() { mtx.lock(); }
-//	void unlock() { mtx.unlock(); }
-//};
+class NODE_ASP {
+public:
+	int value;
+	std::atomic<std::shared_ptr<NODE_ASP>> next;
+	std::mutex mtx;
+	volatile bool removed;
+	NODE_ASP(int x) : next(nullptr), value(x), removed(false) {}
+	void lock() { mtx.lock(); }
+	void unlock() { mtx.unlock(); }
+};
 
-//class L_SET_ASP {
-//private:
-//	std::shared_ptr<NODE_ASP> head, tail;
-//public:
-//	L_SET_ASP() {
-//		head = std::make_shared<NODE_ASP>(std::numeric_limits<int>::min());
-//		tail = std::make_shared<NODE_ASP>(std::numeric_limits<int>::max());
-//		head->next = tail;
-//	}
-//
-//	~L_SET_ASP()
-//	{
-//	}
-//
-//	void clear()
-//	{
-//		head->next = tail;
-//	}
-//
-//	bool validate(const std::shared_ptr<NODE_ASP>& p,
-//		const std::shared_ptr<NODE_ASP>& c)
-//	{
-//		return (p->removed == false)
-//			&& (c->removed == false)
-//			&& (p->next.load() == c);
-//	}
-//
-//	bool add(int x)
-//	{
-//		while (true) {
-//			auto prev = head;
-//			std::shared_ptr<NODE_ASP> curr = prev->next;
-//			while (curr->value < x) {
-//				prev = curr;
-//				curr = curr->next;
-//			}
-//
-//			prev->lock(); curr->lock();
-//			if (false == validate(prev, curr)) {
-//				prev->unlock(); curr->unlock();
-//				continue;
-//			}
-//			if (curr->value == x) {
-//				prev->unlock();	curr->unlock();
-//				return false;
-//			}
-//			else {
-//				auto newNode = std::make_shared<NODE_ASP>(x);;
-//				newNode->next = curr;
-//				prev->next = newNode;
-//				prev->unlock();	curr->unlock();
-//				return true;
-//			}
-//		}
-//	}
-//
-//	bool remove(int x)
-//	{
-//		while (true) {
-//			auto prev = head;
-//			std::shared_ptr<NODE_ASP> curr = prev->next;
-//			while (curr->value < x) {
-//				prev = curr;
-//				curr = curr->next;
-//			}
-//
-//			prev->lock(); curr->lock();
-//			if (false == validate(prev, curr)) {
-//				prev->unlock(); curr->unlock();
-//				continue;
-//			}
-//			if (curr->value != x) {
-//				prev->unlock();	curr->unlock();
-//				return false;
-//			}
-//			else {
-//				curr->removed = true;
-//				std::atomic_thread_fence(std::memory_order_seq_cst);
-//				prev->next = curr->next.load();
-//				prev->unlock();	curr->unlock();
-//				//my_delete(curr);
-//				return true;
-//			}
-//		}
-//	}
-//
-//	bool contains(int x)
-//	{
-//		std::shared_ptr<NODE_ASP> curr = head->next;
-//		while (curr->value < x)
-//			curr = curr->next;
-//		return (curr->value == x) && (curr->removed == false);
-//	}
-//
-//	void print20()
-//	{
-//		std::shared_ptr<NODE_ASP> curr = head->next;
-//		for (int i = 0; i < 20 && curr != tail; ++i) {
-//			std::cout << curr->value << ", ";
-//			curr = curr->next;
-//		}
-//		std::cout << std::endl;
-//	}
-//};
+class L_SET_ASP {
+private:
+	std::shared_ptr<NODE_ASP> head, tail;
+public:
+	L_SET_ASP() {
+		head = std::make_shared<NODE_ASP>(std::numeric_limits<int>::min());
+		tail = std::make_shared<NODE_ASP>(std::numeric_limits<int>::max());
+		head->next = tail;
+	}
+
+	~L_SET_ASP()
+	{
+	}
+
+	void clear()
+	{
+		head->next = tail;
+	}
+
+	bool validate(const std::shared_ptr<NODE_ASP>& p,
+		const std::shared_ptr<NODE_ASP>& c)
+	{
+		return (p->removed == false)
+			&& (c->removed == false)
+			&& (p->next.load() == c);
+	}
+
+	bool add(int x)
+	{
+		while (true) {
+			auto prev = head;
+			std::shared_ptr<NODE_ASP> curr = prev->next;
+			while (curr->value < x) {
+				prev = curr;
+				curr = curr->next;
+			}
+
+			prev->lock(); curr->lock();
+			if (false == validate(prev, curr)) {
+				prev->unlock(); curr->unlock();
+				continue;
+			}
+			if (curr->value == x) {
+				prev->unlock();	curr->unlock();
+				return false;
+			}
+			else {
+				auto newNode = std::make_shared<NODE_ASP>(x);;
+				newNode->next = curr;
+				prev->next = newNode;
+				prev->unlock();	curr->unlock();
+				return true;
+			}
+		}
+	}
+
+	bool remove(int x)
+	{
+		while (true) {
+			auto prev = head;
+			std::shared_ptr<NODE_ASP> curr = prev->next;
+			while (curr->value < x) {
+				prev = curr;
+				curr = curr->next;
+			}
+
+			prev->lock(); curr->lock();
+			if (false == validate(prev, curr)) {
+				prev->unlock(); curr->unlock();
+				continue;
+			}
+			if (curr->value != x) {
+				prev->unlock();	curr->unlock();
+				return false;
+			}
+			else {
+				curr->removed = true;
+				std::atomic_thread_fence(std::memory_order_seq_cst);
+				prev->next = curr->next.load();
+				prev->unlock();	curr->unlock();
+				//my_delete(curr);
+				return true;
+			}
+		}
+	}
+
+	bool contains(int x)
+	{
+		std::shared_ptr<NODE_ASP> curr = head->next;
+		while (curr->value < x)
+			curr = curr->next;
+		return (curr->value == x) && (curr->removed == false);
+	}
+
+	void print20()
+	{
+		std::shared_ptr<NODE_ASP> curr = head->next;
+		for (int i = 0; i < 20 && curr != tail; ++i) {
+			std::cout << curr->value << ", ";
+			curr = curr->next;
+		}
+		std::cout << std::endl;
+	}
+};
 
 class LF_NODE;
 
@@ -874,25 +873,25 @@ public:
 	bool get_mark() {
 		return (1 == (ptr_and_mark & 1));
 	}
-	LF_NODE* get_ptr_and_mark(bool* mark) {
+	LF_NODE* get_ptr_and_mark(bool *mark) {
 		long long val = ptr_and_mark;
 		*mark = (1 == (val & 1));
 		return reinterpret_cast<LF_NODE*>(val & 0xFFFFFFFFFFFFFFFE);
 	}
 
-	bool attempt_mark(LF_NODE* expected_ptr, bool new_mark)
+	bool attempt_mark(LF_NODE* expected_ptr, bool new_mark) 
 	{
-		return CAS(expected_ptr, expected_ptr,
+		return CAS(expected_ptr, expected_ptr, 
 			false, new_mark);
 	}
 
 	bool CAS(LF_NODE* expected_ptr, LF_NODE* new_ptr,
-		bool expected_mark, bool new_mark)
+		bool expected_mark, bool new_mark) 
 	{
-		long long expected_val
+		long long expected_val 
 			= reinterpret_cast<long long>(expected_ptr);
 		if (true == expected_mark) expected_val |= 1;
-		long long new_val
+		long long new_val 
 			= reinterpret_cast<long long>(new_ptr);
 		if (true == new_mark) new_val |= 1;
 		return std::atomic_compare_exchange_strong(
@@ -900,7 +899,7 @@ public:
 			&expected_val, new_val);
 	}
 
-};
+};	
 
 class LF_NODE {
 public:
@@ -941,7 +940,7 @@ public:
 	void find(LF_NODE*& prev, LF_NODE*& curr, int x)
 	{
 		while (true) {
-		retry:
+			retry:
 			prev = head;
 			curr = prev->next.get_ptr();
 			while (true) {
@@ -1030,12 +1029,7 @@ private:
 	};
 	THREAD_COUNTER thread_counter[MAX_THREADS];
 public:
-	EBR(){
-		epoch_counter = 0;
-		for (int i = 0; i < MAX_THREADS; ++i) {
-			thread_counter[i].local_epoch = std::numeric_limits<int>::max();
-		}
-	}
+	EBR() {}
 	~EBR() {
 		recycle();
 	}
@@ -1048,15 +1042,7 @@ public:
 			}
 		}
 	}
-	void start() {
-		int ep = ++epoch_counter;
-		thread_counter[thread_id].local_epoch = ep;
-	}
-	void end() {
-		thread_counter[thread_id].local_epoch = std::numeric_limits<int>::max();
-	}
 	void delete_node(LF_NODE* node) {
-		node->epoch = epoch_counter.load();
 		free_list[thread_id].push(node);
 	}
 	LF_NODE* new_node(int x) {
@@ -1111,46 +1097,42 @@ public:
 
 	void find(LF_NODE*& prev, LF_NODE*& curr, int x)
 	{
-
-	retry:
-		prev = head;
-		curr = prev->next.get_ptr();
 		while (true) {
-			bool curr_mark;
-			auto succ = curr->next.get_ptr_and_mark(&curr_mark);
-			while (true == curr_mark) {
-				if (false == prev->next.CAS(curr, succ, false, false))
-					goto retry;
-				ebr.delete_node(curr);
+		retry:
+			prev = head;
+			curr = prev->next.get_ptr();
+			while (true) {
+				bool curr_mark;
+				auto succ = curr->next.get_ptr_and_mark(&curr_mark);
+				while (true == curr_mark) {
+					if (false == prev->next.CAS(curr, succ, false, false))
+						goto retry;
+					ebr.delete_node(curr);
+					curr = succ;
+					succ = curr->next.get_ptr_and_mark(&curr_mark);
+				}
+				if (curr->value >= x)
+					return;
+				prev = curr;
 				curr = succ;
-				succ = curr->next.get_ptr_and_mark(&curr_mark);
 			}
-			if (curr->value >= x)
-				return;
-			prev = curr;
-			curr = succ;
 		}
-
 	}
 
 	bool add(int x)
 	{
-		ebr.start();
 		while (true) {
 			LF_NODE* prev, * curr;
 			find(prev, curr, x);
 
 			if (curr->value == x) {
-				ebr.end();
 				return false;
 			}
 			else {
 				auto newNode = ebr.new_node(x);
 				newNode->next = curr;
-				if (true == prev->next.CAS(curr, newNode, false, false)) {
-					ebr.end();
+				if (true == prev->next.CAS(curr, newNode, false, false))
 					return true;
-				}
 				else ebr.delete_node(newNode);
 			}
 		}
@@ -1158,37 +1140,30 @@ public:
 
 	bool remove(int x)
 	{
-		ebr.start();
 		while (true) {
 			LF_NODE* prev, * curr;
 			find(prev, curr, x);
 
 			if (curr->value != x) {
-				ebr.end();
 				return false;
 			}
 			else {
 				auto succ = curr->next.get_ptr();
 				if (false == curr->next.attempt_mark(succ, true))
 					continue;
-				if (true == prev->next.CAS(curr, succ, false, false)) {
+				if (true == prev->next.CAS(curr, succ, false, false))
 					ebr.delete_node(curr);
-				ebr.end();
 				return true;
-				}
 			}
 		}
 	}
 
 	bool contains(int x)
 	{
-		ebr.start();
 		auto curr = head->next.get_ptr();
 		while (curr->value < x)
 			curr = curr->next.get_ptr();
-		auto res = (curr->value == x) && (curr->next.get_mark() == false);
-		ebr.end();
-		return res;
+		return (curr->value == x) && (curr->next.get_mark() == false);
 	}
 
 	void print20()
@@ -1263,8 +1238,6 @@ void check_history(int num_threads)
 
 void benchmark_check(int num_threads, int th_id)
 {
-	thread_id = th_id;
-	::num_threads = num_threads;
 	for (int i = 0; i < LOOP / num_threads; ++i) {
 		int op = rand() % 3;
 		switch (op) {
