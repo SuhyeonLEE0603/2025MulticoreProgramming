@@ -1032,9 +1032,6 @@ private:
 public:
 	EBR(){
 		epoch_counter = 0;
-		for (int i = 0; i < MAX_THREADS; ++i) {
-			thread_counter[i].local_epoch = std::numeric_limits<int>::max();
-		}
 	}
 	~EBR() {
 		recycle();
@@ -1111,26 +1108,26 @@ public:
 
 	void find(LF_NODE*& prev, LF_NODE*& curr, int x)
 	{
-
-	retry:
-		prev = head;
-		curr = prev->next.get_ptr();
 		while (true) {
-			bool curr_mark;
-			auto succ = curr->next.get_ptr_and_mark(&curr_mark);
-			while (true == curr_mark) {
-				if (false == prev->next.CAS(curr, succ, false, false))
-					goto retry;
-				ebr.delete_node(curr);
+		retry:
+			prev = head;
+			curr = prev->next.get_ptr();
+			while (true) {
+				bool curr_mark;
+				auto succ = curr->next.get_ptr_and_mark(&curr_mark);
+				while (true == curr_mark) {
+					if (false == prev->next.CAS(curr, succ, false, false))
+						goto retry;
+					ebr.delete_node(curr);
+					curr = succ;
+					succ = curr->next.get_ptr_and_mark(&curr_mark);
+				}
+				if (curr->value >= x)
+					return;
+				prev = curr;
 				curr = succ;
-				succ = curr->next.get_ptr_and_mark(&curr_mark);
 			}
-			if (curr->value >= x)
-				return;
-			prev = curr;
-			curr = succ;
 		}
-
 	}
 
 	bool add(int x)
@@ -1288,6 +1285,7 @@ void benchmark_check(int num_threads, int th_id)
 }
 void benchmark(const int num_threads)
 {
+	::num_threads = num_threads;
 	for (int i = 0; i < LOOP / num_threads; ++i) {
 		int value = rand() % RANGE;
 		int op = rand() % 3;

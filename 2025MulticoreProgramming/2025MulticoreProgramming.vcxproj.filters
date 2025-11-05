@@ -42,5 +42,11 @@
     <ClCompile Include="SKIP_LIST.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="QUEUE.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="2019182027_이수현_과제10번.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
